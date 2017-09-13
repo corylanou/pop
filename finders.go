@@ -1,6 +1,8 @@
 package pop
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -12,6 +14,22 @@ import (
 //
 //	c.Find(&User{}, 1)
 func (c *Connection) Find(model interface{}, id interface{}) error {
+	if m, ok := model.(driver.Valuer); ok {
+		if v, err := m.Value(); err == nil {
+			err := Q(c).Find(v, id)
+			if err != nil {
+				return err
+			}
+			s, ok := model.(sql.Scanner)
+			if ok {
+				s.Scan(v)
+			}
+			return nil
+		} else {
+			return err
+		}
+	}
+
 	return Q(c).Find(model, id)
 }
 

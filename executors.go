@@ -1,6 +1,7 @@
 package pop
 
 import (
+	"database/sql/driver"
 	"fmt"
 
 	. "github.com/markbates/pop/columns"
@@ -37,6 +38,14 @@ func (c *Connection) ValidateAndSave(model interface{}, excludeColumns ...string
 var emptyUUID = uuid.Nil.String()
 
 func (c *Connection) Save(model interface{}, excludeColumns ...string) error {
+	if m, ok := model.(driver.Valuer); ok {
+		if v, err := m.Value(); err == nil {
+			model = v
+		} else {
+			return err
+		}
+	}
+
 	sm := &Model{Value: model}
 	id := sm.ID()
 
@@ -60,6 +69,14 @@ func (c *Connection) ValidateAndCreate(model interface{}, excludeColumns ...stri
 
 func (c *Connection) Create(model interface{}, excludeColumns ...string) error {
 	return c.timeFunc("Create", func() error {
+		if m, ok := model.(driver.Valuer); ok {
+			if v, err := m.Value(); err == nil {
+				model = v
+			} else {
+				return err
+			}
+		}
+
 		var err error
 		sm := &Model{Value: model}
 
@@ -103,6 +120,14 @@ func (c *Connection) ValidateAndUpdate(model interface{}, excludeColumns ...stri
 
 func (c *Connection) Update(model interface{}, excludeColumns ...string) error {
 	return c.timeFunc("Update", func() error {
+		if m, ok := model.(driver.Valuer); ok {
+			if v, err := m.Value(); err == nil {
+				model = v
+			} else {
+				return err
+			}
+		}
+
 		var err error
 		sm := &Model{Value: model}
 
